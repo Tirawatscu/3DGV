@@ -51,7 +51,7 @@ def on_message(mqtt_client, userdata, msg):
                 client['rssi'] = data
                 client['last_updated'] = datetime.now()
             elif data_type == 'data':
-                socketio.emit('update_data', json.dumps({'client_id': client_id, 'data': data}))
+                socketio.emit('update_data', json.dumps({'client_id': client_id, 'data': data["0"]}))
 
 mqtt_client = mqtt.Client()
 mqtt_client.on_connect = on_connect
