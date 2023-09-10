@@ -2,6 +2,7 @@ from flask import Flask, render_template, json, request
 from flask_socketio import SocketIO
 import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
+import time
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -60,12 +61,12 @@ mqtt_client.loop_start()
 
 @socketio.on('start_collecting')
 def handle_start_collecting(data):
-    start_time = datetime.now() + timedelta(seconds=5)
+    start_time = int(time.time()) + 3
     duration = data.get('duration', 30)
     for client in known_clients:
         if client['status'] == 'connected':
             command = {
-                "start_time": start_time.strftime('%Y-%m-%d %H:%M:%S'),
+                "start_time": start_time,
                 "duration": duration
             }
             mqtt_client.publish(f"{client['client_id']}/command", json.dumps(command))
