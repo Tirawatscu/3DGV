@@ -40,7 +40,7 @@ def collect_adc_data(duration):
     return converted_data, actual_sampling_rate
 
 def simulate_adc_data(duration):
-    channelList = [0, 1, 2]
+    channelList = [0]
     sample_count = int(duration * sampling_rate)
     simulated_data = {channel: [] for channel in channelList}
     time_per_sample = duration / sample_count
