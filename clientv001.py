@@ -65,8 +65,8 @@ def get_real_rssi():
             command_output = subprocess.check_output(['iwconfig'], stderr=subprocess.STDOUT, text=True, universal_newlines=True)
             lines = command_output.split('\n')
             for line in lines:
-                if 'Link Quality' in line:
-                    rssi = line.split('=')[1].split('/')[0].strip()
+                if 'Signal level' in line:
+                    rssi = line.split('=')[2].split(" ")[0].strip()
                     return int(rssi)
         elif os_platform == 'Darwin':
             command_output = subprocess.check_output(
