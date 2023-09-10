@@ -74,7 +74,7 @@ mqtt_client = mqtt.Client(client_id=client_id)
 mqtt_client.on_connect = on_connect
 mqtt_client.message_callback_add(f"{client_id}/command", on_command)
 
-mqtt_client.connect("192.168.1.52", 1883, 60)
+mqtt_client.connect("192.168.1.112", 1883, 60)
 
 mqtt_client.loop_start()
 

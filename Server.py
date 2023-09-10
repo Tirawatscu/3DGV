@@ -55,7 +55,7 @@ def on_message(mqtt_client, userdata, msg):
 mqtt_client = mqtt.Client()
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
-mqtt_client.connect('192.168.1.52', 1883, 60)
+mqtt_client.connect('192.168.1.112', 1883, 60)
 mqtt_client.loop_start()
 
 @socketio.on('start_collecting')
