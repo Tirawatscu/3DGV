@@ -90,7 +90,7 @@ def get_real_rssi():
 def collect_data(client, userdata, msg):
     print(f"Received command on topic {msg.topic}: {msg.payload.decode()}")
     command = json.loads(msg.payload.decode())
-    start_time = datetime.datetime.strptime(command['start_time'], '%Y-%m-%d %H:%M:%S')
+    start_time = command['start_time']
     duration = int(command['duration'])
     freq = 1  # 1 Hz
 
