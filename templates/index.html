@@ -37,12 +37,12 @@
         socket.on('update_data', function(data) {
             var parsedData = JSON.parse(data);
             var clientId = parsedData.client_id;
-            var values = JSON.parse(parsedData.data);
+            var values = parsedData.data;  // Already parsed on the server-side
             
             Plotly.newPlot(clientId + '_plot', [{
                 y: values,
                 type: 'line'
-            }]);
+            }]);            
         });
 
         function startCollecting() {
