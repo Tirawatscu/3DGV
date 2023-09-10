@@ -3,20 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Connected Clients</title>
+    <link rel="stylesheet" href="../static/css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <h1>Connected Clients</h1>
-    <div id="clientsTable"></div>
-    <input id="duration" type="number" placeholder="Duration in seconds">
-    <button onclick="startCollecting()">Start Collecting</button>
-
-    <h2>Data</h2>
-    <div id="device1_plot"></div>
-    <div id="device2_plot"></div>
-    <div id="device3_plot"></div>
-
+    <div class="container">
+        <nav class="navbar">
+            <ul>
+                <li><a href="#">Acquisition Page</a></li>
+                <li><a href="#">Event Table</a></li>
+            </ul>
+        </nav>
+        <main class="content">
+            <h1>Connected Clients</h1>
+            <div id="clientsTable"></div>
+            <input id="duration" type="number" placeholder="Duration in seconds">
+            <button onclick="startCollecting()">Start Collecting</button>
+            <h2>Data</h2>
+            <div id="device1_plot"></div>
+            <div id="device2_plot"></div>
+            <div id="device3_plot"></div>
+        </main>
+    </div>
     <script>
         var socket = io.connect('http://' + document.domain + ':' + location.port);
 
@@ -37,7 +46,7 @@
         socket.on('update_data', function(data) {
             var parsedData = JSON.parse(data);
             var clientId = parsedData.client_id;
-            var values = JSON.parse(parsedData.data);
+            var values = parsedData.data;  // Already parsed on the server-side
             
             Plotly.newPlot(clientId + '_plot', [{
                 y: values,

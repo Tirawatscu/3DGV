@@ -1,0 +1,32 @@
+.navbar {
+    width: 100%;
+    background-color: #333;
+    overflow: auto;
+    color: white;
+}
+
+.navbar ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    overflow: hidden;
+}
+
+.navbar ul li {
+    float: left;
+    display: block;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: white;
+}
+
+.navbar ul li a {
+    text-decoration: none;
+    color: white;
+    display: block;
+}
+
+.content {
+    padding: 20px;
+}

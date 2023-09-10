@@ -3,32 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Connected Clients</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <script src="../static/js/socket.io.min.js"></script>
+    <script src="../static/js/plotly-latest.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <div class="content">
+        <nav class="navbar">
+            <ul>
+                <li><a href="#">Acquisition Page</a></li>
+                <li><a href="#">Event Table</a></li>
+            </ul>
+        </nav>
+        <main class="content">
             <h1>Connected Clients</h1>
             <div id="clientsTable"></div>
             <input id="duration" type="number" placeholder="Duration in seconds">
             <button onclick="startCollecting()">Start Collecting</button>
-    
             <h2>Data</h2>
             <div id="device1_plot"></div>
             <div id="device2_plot"></div>
             <div id="device3_plot"></div>
-        </div>
-        <div class="sidebar">
-            <h3>Navigation</h3>
-            <ul>
-                <li><a href="#acquisition" onclick="showPage('acquisition')">Acquisition</a></li>
-                <li><a href="#events" onclick="showPage('events')">Event Table</a></li>
-            </ul>
-        </div>
+        </main>
     </div>
-
     <script>
         var socket = io.connect('http://' + document.domain + ':' + location.port);
 

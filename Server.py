@@ -4,7 +4,7 @@ import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
 import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", template_folder="templates")
 socketio = SocketIO(app)
 
 known_clients = [
@@ -80,4 +80,4 @@ def index():
 
 if __name__ == '__main__':
     socketio.start_background_task(check_client_status)
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=1111)
