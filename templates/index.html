@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Connected Clients</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Connected Clients</h1>
+    <div id="clientsTable"></div>
+    <input id="duration" type="number" placeholder="Duration in seconds">
+    <button onclick="startCollecting()">Start Collecting</button>
+
+    <h2>Data</h2>
+    <div id="device1_plot"></div>
+    <div id="device2_plot"></div>
+    <div id="device3_plot"></div>
+
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function() {
+            console.log("Connected!");
+        });
+
+        socket.on('update_clients', function(data) {
+            var clients = JSON.parse(data);
+            var table = "<table><tr><th>Client ID</th><th>Status</th><th>RSSI</th><th>Last Updated</th></tr>";
+            for (var i = 0; i < clients.length; i++) {
+                table += "<tr><td>" + clients[i].client_id + "</td><td>" + clients[i].status + "</td><td>" + clients[i].rssi + "</td><td>" + clients[i].last_updated + "</td></tr>";
+            }
+            table += "</table>";
+            document.getElementById("clientsTable").innerHTML = table;
+        });
+
+        socket.on('update_data', function(data) {
+            var parsedData = JSON.parse(data);
+            var clientId = parsedData.client_id;
+            var values = JSON.parse(parsedData.data);
+            
+            Plotly.newPlot(clientId + '_plot', [{
+                y: values,
+                type: 'line'
+            }]);
+        });
+
+        function startCollecting() {
+            var duration = document.getElementById("duration").value;
+            socket.emit('start_collecting', {duration: duration});
+        }
+    </script>
+</body>
+</html>
