@@ -1,3 +1,4 @@
+import configparser
 import paho.mqtt.client as mqtt
 import time
 import json
@@ -6,6 +7,14 @@ import datetime  # Import the datetime library
 import subprocess
 import platform
 import threading  # Import the threading library
+
+# Read configuration from file
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+MQTT_IP = config['MQTT']['IP']
+MQTT_PORT = int(config['MQTT']['Port'])
+client_id = config['Device']['ID']
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -68,13 +77,11 @@ def publish_rssi():
             mqtt_client.publish(f"{client_id}/rssi", rssi_value)
         time.sleep(5)
 
-client_id = "device1"
-
 mqtt_client = mqtt.Client(client_id=client_id)
 mqtt_client.on_connect = on_connect
 mqtt_client.message_callback_add(f"{client_id}/command", on_command)
 
-mqtt_client.connect("192.168.1.112", 1883, 60)
+mqtt_client.connect(MQTT_IP, MQTT_PORT, 60)
 
 mqtt_client.loop_start()
 
