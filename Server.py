@@ -3,8 +3,25 @@ from flask_socketio import SocketIO
 import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
 import time
+import os
+from models import db, AdcData
 
-app = Flask(__name__, static_folder="static", template_folder="templates")
+base_dir = os.path.abspath(os.path.dirname(__file__))
+Storage_path = os.path.join(base_dir, 'storage')
+db_path = os.path.join(base_dir, 'gvdb2023.db')
+
+# Create 'Storages' directory if it doesn't exist
+if not os.path.exists(Storage_path):
+    os.makedirs(Storage_path)
+
+def create_app():
+    app = Flask(__name__, static_folder="static", template_folder="templates")
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+    db.init_app(app)
+    return app
+
+app = create_app()
+    
 socketio = SocketIO(app)
 
 known_clients = [
@@ -25,7 +42,7 @@ def handle_connect(auth=None):
 
 def check_client_status():
     while True:
-        socketio.sleep(10)
+        socketio.sleep(5)
         for client in known_clients:
             if client['last_updated'] is None:
                 continue
@@ -56,12 +73,6 @@ def on_message(mqtt_client, userdata, msg):
                 socketio.emit('update_data', json.dumps({'client_id': client_id, 'data': actual_data}))
 
 
-mqtt_client = mqtt.Client()
-mqtt_client.on_connect = on_connect
-mqtt_client.on_message = on_message
-mqtt_client.connect('192.168.1.112', 1883, 60)
-mqtt_client.loop_start()
-
 @socketio.on('start_collecting')
 def handle_start_collecting(data):
     start_time = int(time.time()) + 3
@@ -79,5 +90,11 @@ def index():
     return render_template('index.html', clients=known_clients)
 
 if __name__ == '__main__':
+    mqtt_client = mqtt.Client()
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect('192.168.1.112', 1883, 60)
+    mqtt_client.loop_start()
+    
     socketio.start_background_task(check_client_status)
     socketio.run(app, host='0.0.0.0', port=1111)

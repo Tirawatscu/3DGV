@@ -92,7 +92,6 @@ def collect_data(client, userdata, msg):
     command = json.loads(msg.payload.decode())
     start_time = command['start_time']
     duration = int(command['duration'])
-    freq = 1  # 1 Hz
 
     
     # Wait until the start time
