@@ -40,6 +40,7 @@ def collect_adc_data(duration):
     return converted_data, actual_sampling_rate
 
 def simulate_adc_data(duration):
+    print(f"Starting simulation at {datetime.datetime.now().strftime('%H:%M:%S')}")
     channelList = [0]
     sample_count = int(duration * sampling_rate)
     simulated_data = {channel: [] for channel in channelList}
@@ -104,10 +105,9 @@ def collect_data(client, userdata, msg):
     else:
         adc_data, actual_sampling_rate = collect_adc_data(duration)
 
+    print(f"Sent data to the server at {datetime.datetime.now().strftime('%H:%M:%S')}")
     mqtt_client.publish(f"{client_id}/data", json.dumps(adc_data))
-    
-    
-    print(f"Sent data to the server")
+    print(f"Finsihed sending data at {datetime.datetime.now().strftime('%H:%M:%S')}")
 
 def on_command(client, userdata, msg):
     data_thread = threading.Thread(target=collect_data, args=(client, userdata, msg))
