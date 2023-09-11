@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="../static/css/styles.css">
     <script src="../static/js/socket.io.min.js"></script>
     <script src="../static/js/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -18,66 +19,64 @@
         <main class="content">
             <h1>Connected Clients</h1>
             <div id="clientsTable"></div>
-
             <div class="col-12">
                 <div class="card card-chart">
-                  <div class="card-header ">
-                      <div class="col-sm-12 text-center">
-                        <h2 class="card-title", style="margin-bottom: 5%;">gVWave Acquisition</h2>
-                        <div class="row" , style="margin-bottom: 3%;">
+                    <div class="card-header ">
+                        <div class="col-sm-12 text-center">
+                          <h2 class="card-title", style="margin-bottom: 5%;">gVWave Acquisition</h2>
+                          <div class="row" , style="margin-bottom: 3%;">
+                              <div class="col-6">
+                                <label for="duration">Duration (seconds):</label>
+                                <input type="number" class="form-control" id="duration" step="0.1" min="0.1" value="2">
+                              </div>
+                              <div class="col-6">
+                                <label for="radius">Radius:</label>
+                                <input type="number" class="form-control" id="radius" step="1" min="1" value="6">
+                              </div>
+                          </div>
+                          <div class="row", style="margin-bottom: 3%;">
                             <div class="col-6">
-                              <label for="duration">Duration (seconds):</label>
-                              <input type="number" class="form-control" id="duration" step="0.1" min="0.1" value="2">
+                              <label for="latitude">Latitude:</label>
+                              <input type="number" class="form-control" id="latitude" step="0.0001" min="0.1" value="13.736717">
                             </div>
                             <div class="col-6">
-                              <label for="radius">Radius:</label>
-                              <input type="number" class="form-control" id="radius" step="1" min="1" value="6">
+                              <label for="longitude">longitude:</label>
+                              <input type="number" class="form-control" id="longitude" step="0.0001" min="0.1" value="100.523186">
                             </div>
-                        </div>
-                        <div class="row", style="margin-bottom: 3%;">
-                          <div class="col-6">
-                            <label for="latitude">Latitude:</label>
-                            <input type="number" class="form-control" id="latitude" step="0.0001" min="0.1" value="13.736717">
                           </div>
-                          <div class="col-6">
-                            <label for="longitude">longitude:</label>
-                            <input type="number" class="form-control" id="longitude" step="0.0001" min="0.1" value="100.523186">
+                          <div class="row", style="margin-bottom: 3%;">
+                            <div class="col-12">
+                              <label for="description">Short brief about the location</label>
+                              <input type="text" class="form-control" id="description" value="Location">
+                            </div>
                           </div>
-                        </div>
-                        <div class="row", style="margin-bottom: 3%;">
-                          <div class="col-12">
-                            <label for="description">Short brief about the location</label>
-                            <input type="text" class="form-control" id="description" value="Location">
+                          <div class="centered-button", style="margin-top: 5%; margin-bottom: 1%">
+                            <button id="collect-button" class="btn btn-primary", style="width: fit-content;">
+                                <i class="tim-icons icon-spaceship"></i> Start Collection
+                            </button>
                           </div>
-                        </div>
-                        <div class="centered-button", style="margin-top: 5%; margin-bottom: 1%">
-                          <button id="collect-button" class="btn btn-primary", style="width: fit-content;">
-                              <i class="tim-icons icon-spaceship"></i> Start Collection
-                          </button>
-                        </div>
-    
-                        <div class="card-body" style="height: auto;">
-                          <div class="chart-area" style="height: auto;">
-                              <div id="plot" style="margin-top: 20px;"></div>
+      
+                          <div class="card-body" style="height: auto;">
+                            <div class="chart-area" style="height: auto;">
+                                <div id="plot" style="margin-top: 20px;"></div>
+                            </div>
                           </div>
+                        <div id="sampling-rate" style="margin-top: 10px;"></div>
+                        <!-- Add this input element for file uploads -->
+      
+                        <button id="upload_data" class="btn btn-primary" style="width: fit-content;">
+                          <input type="file" id="file-input" accept=".json">
+                          <i class="tim-icons icon-cloud-upload-94"></i> Upload data
+                        </button>
+      
+      
+                        <!-- Add this "Confirm" button and set it to be initially hidden -->
+                        <button id="confirm_data" class="btn btn-primary" style="width: fit-content; display: none;">
+                          <i class="tim-icons icon-check-2"></i> Confirm
+                        </button>
+                        <div class="centered-button" style="margin-top: 20px;">
                         </div>
-                      <div id="sampling-rate" style="margin-top: 10px;"></div>
-                      <!-- Add this input element for file uploads -->
-    
-                      <button id="upload_data" class="btn btn-primary" style="width: fit-content;">
-                        <input type="file" id="file-input" accept=".json">
-                        <i class="tim-icons icon-cloud-upload-94"></i> Upload data
-                      </button>
-    
-    
-                      <!-- Add this "Confirm" button and set it to be initially hidden -->
-                      <button id="confirm_data" class="btn btn-primary" style="width: fit-content; display: none;">
-                        <i class="tim-icons icon-check-2"></i> Confirm
-                      </button>
-                      <div class="centered-button" style="margin-top: 20px;">
-                      </div>
-                </div>
-              </div>
+                  </div>
             </div>
             <h2>Data</h2>
             <div id="device1_plot"></div>
@@ -86,44 +85,13 @@
         </main>
     </div>
     <script>
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-        socket.on('connect', function() {
-            console.log("Connected!");
-        });
-
-        socket.on('update_clients', function(data) {
-            var clients = JSON.parse(data);
-            var table = "<table><tr><th>Client ID</th><th>Status</th><th>RSSI</th><th>Last Updated</th></tr>";
-            for (var i = 0; i < clients.length; i++) {
-                table += "<tr><td>" + clients[i].client_id + "</td><td>" + clients[i].status + "</td><td>" + clients[i].rssi + "</td><td>" + clients[i].last_updated + "</td></tr>";
-            }
-            table += "</table>";
-            document.getElementById("clientsTable").innerHTML = table;
-        });
-
-        socket.on('update_data', function(data) {
-            var parsedData = JSON.parse(data);
-            var clientId = parsedData.client_id;
-            var values = parsedData.data;  // Already parsed on the server-side
-            
-            Plotly.newPlot(clientId + '_plot', [{
-                y: values,
-                type: 'line'
-            }]);
-        });
-
-        //function startCollecting() {
-        //    var duration = document.getElementById("duration").value;
-        //    socket.emit('start_collecting', {duration: duration});
-        //}
-
+        // Your existing JavaScript code
         $(document).ready(function () {
             $("#collect-button").click(function () {
                 $("#collect-button").prop("disabled", true);
                 let duration = parseFloat($("#duration").val());
-                socket.emit('start_collecting', {duration: duration});
-            }
+                socket.emit('start_collecting', { duration: duration });
+            });
         });
     </script>
 </body>
