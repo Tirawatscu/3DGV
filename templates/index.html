@@ -85,7 +85,32 @@
         </main>
     </div>
     <script>
-        // Your existing JavaScript code
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function() {
+            console.log("Connected!");
+        });
+
+        socket.on('update_clients', function(data) {
+            var clients = JSON.parse(data);
+            var table = "<table><tr><th>Client ID</th><th>Status</th><th>RSSI</th><th>Last Updated</th></tr>";
+            for (var i = 0; i < clients.length; i++) {
+                table += "<tr><td>" + clients[i].client_id + "</td><td>" + clients[i].status + "</td><td>" + clients[i].rssi + "</td><td>" + clients[i].last_updated + "</td></tr>";
+            }
+            table += "</table>";
+            document.getElementById("clientsTable").innerHTML = table;
+        });
+
+        socket.on('update_data', function(data) {
+            var parsedData = JSON.parse(data);
+            var clientId = parsedData.client_id;
+            var values = parsedData.data;  // Already parsed on the server-side
+            
+            Plotly.newPlot(clientId + '_plot', [{
+                y: values,
+                type: 'line'
+            }]);
+        });
         $(document).ready(function () {
             $("#collect-button").click(function () {
                 $("#collect-button").prop("disabled", true);
