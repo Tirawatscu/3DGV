@@ -42,15 +42,20 @@ def collect_adc_data(duration):
 def simulate_adc_data(duration):
     print(f"Starting simulation at {datetime.datetime.now().strftime('%H:%M:%S')}")
     channelList = [0]
-    sample_count = int(duration * sampling_rate)
     simulated_data = {channel: [] for channel in channelList}
-    time_per_sample = duration / sample_count
 
-    for _ in range(sample_count):
-        for channel in channelList:
-            simulated_data[channel].append(round(random.uniform(-0.2, 0.2), 2))
-        time.sleep(time_per_sample)
-
+    start_time = time.perf_counter()
+    next_sample_time = start_time + interval
+    no_sample = duration * sampling_rate
+    
+    while len(simulated_data[0]) < no_sample:
+        current_time = time.perf_counter()
+        if current_time >= next_sample_time:
+            for channel in channelList:
+                simulated_data[channel].append(round(random.uniform(-0.2, 0.2), 2))
+            next_sample_time += interval
+    
+    actual_sampling_rate = len(simulated_data[0]) / (current_time - start_time)
     actual_sampling_rate = sampling_rate
     return simulated_data, actual_sampling_rate
 
