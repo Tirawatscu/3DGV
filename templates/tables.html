@@ -1,31 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Connected Clients</title>
-    <link rel="stylesheet" href="../static/css/styles.css">
+    <!-- Bootstrap CSS -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+
     <script src="../static/js/socket.io.min.js"></script>
     <script src="../static/js/plotly-latest.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+
 <body>
     <div class="container">
-        <nav class="navbar">
-            <ul>
-                <li><a href="./">Acquisition Page</a></li>
-                <li><a href="./tables.html">Event Table</a></li>
-            </ul>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Connected Clients</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="./">Acquisition Page</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./tables.html">Event Table</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </nav>
-      <div class="content">
-        <div class="row">
+
+        <div class="row justify-content-center">
             <div class="col-md-12">
-                <div class="card ">
-                    <div class="card-header">
+                <div class="card mt-4">
+                    <div class="card-header text-center">
                         <h2>Events Table</h2>
                     </div>
-                    <div class="card-body ">
-                        <div class="table-full-width table-responsive">
-                            <table class="table">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
                                 <tbody>
                                     {% for row in data %}
                                     <tr>
@@ -80,6 +97,7 @@
             </div>
         </div>
     </div>
+
     <script>
         $(document).ready(function() {
             $('.zoom-split').click(function() {
@@ -248,9 +266,10 @@
         function downloadWaveformData(id) {
             window.location.href = "/download_waveform_data?id=" + id;
         }
-        
-        
-        
     </script>
+
+    <!-- Bootstrap JS (Optional) -->
+    <script src="../static/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
