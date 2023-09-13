@@ -26,9 +26,9 @@ app = create_app()
 socketio = SocketIO(app)
 
 known_clients = [
-    {'client_id': 'device1', 'status': 'disconnected', 'rssi': None, 'battery':None ,'last_updated': None, 'index': 0},
-    {'client_id': 'device2', 'status': 'disconnected', 'rssi': None, 'battery':None ,'last_updated': None, 'index': 1},
-    {'client_id': 'device3', 'status': 'disconnected', 'rssi': None, 'battery':None ,'last_updated': None, 'index': 2},
+    {'client_id': 'device1', 'status': 'disconnected', 'rssi': None, 'battery_voltage':None ,'battery_capacity':None ,'last_updated': None, 'index': 0},
+    {'client_id': 'device2', 'status': 'disconnected', 'rssi': None, 'battery_voltage':None ,'battery_capacity':None ,'last_updated': None, 'index': 1},
+    {'client_id': 'device3', 'status': 'disconnected', 'rssi': None, 'battery_voltage':None ,'battery_capacity':None ,'last_updated': None, 'index': 2},
 ]
 
 file_data_placeholder = {
@@ -78,7 +78,8 @@ def check_client_status():
             if datetime.now() - client['last_updated'] > timedelta(seconds=20):
                 client['status'] = 'disconnected'
                 client['rssi'] = None
-                client['battery'] = None
+                client['battery_voltage'] = None
+                client['battery_capacity'] = None
         socketio.emit('update_clients', json.dumps(known_clients, default=custom_json))
 
 def on_connect(mqtt_client, userdata, flags, rc):
@@ -89,7 +90,7 @@ def on_connect(mqtt_client, userdata, flags, rc):
         mqtt_client.subscribe(f"{client['client_id']}/data")
 
 def on_message(mqtt_client, userdata, msg):
-    #print(f'{msg.topic} {str(msg.payload.decode())}')
+    print(f'{msg.topic} {str(msg.payload.decode())}')
     client_id, data_type = msg.topic.split('/')
     data = msg.payload.decode()
     for client in known_clients:
@@ -98,7 +99,8 @@ def on_message(mqtt_client, userdata, msg):
                 parsed_data = json.loads(data)
                 client['status'] = 'connected'
                 client['rssi'] = data.get('rssi', None)
-                client['battery'] = data.get('battery', None)
+                client['battery_voltage'] = data.get('battery_voltage', None)
+                client['battery_capacity'] = data.get('battery_capacity', None)
                 client['last_updated'] = datetime.now()
             elif data_type == 'data':
                 parsed_data = json.loads(data)
