@@ -1,4 +1,4 @@
-from flask import Flask, render_template, json, request
+from flask import Flask, render_template, json, request, jsonify
 from flask_socketio import SocketIO
 import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
@@ -6,7 +6,6 @@ import time
 import os
 from models import db, AdcData
 import configparser  
-import jsonify
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
 Storage_path = os.path.join(base_dir, 'storage')
@@ -128,18 +127,18 @@ def handle_start_collecting(data):
             }
             mqtt_client.publish(f"{client['client_id']}/command", json.dumps(command))
             
-            file_data_placeholder['metadata']['timestamp'] = start_time
-            file_data_placeholder['metadata']['duration'] = duration
-            file_data_placeholder['metadata']['radius'] = data.get('radius', 0)
-            file_data_placeholder['metadata']['latitude'] = data.get('latitude', 0)
-            file_data_placeholder['metadata']['longitude'] = data.get('longitude', 0)
-            file_data_placeholder['metadata']['location'] = data.get('location', '')
+    file_data_placeholder['metadata']['timestamp'] = start_time
+    file_data_placeholder['metadata']['duration'] = duration
+    file_data_placeholder['metadata']['radius'] = data.get('radius', 0)
+    file_data_placeholder['metadata']['latitude'] = data.get('latitude', 0)
+    file_data_placeholder['metadata']['longitude'] = data.get('longitude', 0)
+    file_data_placeholder['metadata']['location'] = data.get('location', '')
 
-            # write json file
-            with open(f'{Storage_path}/{json_name}.json', 'w') as f:
-                json.dump(file_data_placeholder, f)
-                
-            store_event_in_database(start_time, 3, duration, data.get('radius', 0), data.get('latitude', 0), data.get('longitude', 0), f'{Storage_path}/{json_name}.json', data.get('location', ''))
+    # write json file
+    with open(f'{Storage_path}/{json_name}.json', 'w') as f:
+        json.dump(file_data_placeholder, f)
+        
+    store_event_in_database(start_time, 3, duration, data.get('radius', 0), data.get('latitude', 0), data.get('longitude', 0), f'{Storage_path}/{json_name}.json', data.get('location', ''))
             
             
 @app.route('/')
