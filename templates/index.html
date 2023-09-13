@@ -98,7 +98,7 @@
             var clients = JSON.parse(data);
             var table = "<table><tr><th>Client ID</th><th>Status</th><th>RSSI</th><th>Bat_Volt v.</th><th>Bat_Cap %</th><th>Last Updated</th></tr>";
             for (var i = 0; i < clients.length; i++) {
-                table += "<tr><td>" + clients[i].client_id + "</td><td>" + clients[i].status + "</td><td>" + clients[i].rssi + "</td><td>" + client[i].battery_voltage + "</td><td>" + client[i].battery_capacity + "</td><td>" +clients[i].last_updated + "</td></tr>";
+                table += "<tr><td>" + clients[i].client_id + "</td><td>" + clients[i].status + "</td><td>" + clients[i].rssi + "</td><td>" + clients[i].battery_voltage + "</td><td>" + clients[i].battery_capacity + "</td><td>" +clients[i].last_updated + "</td></tr>";
             }
             table += "</table>";
             document.getElementById("clientsTable").innerHTML = table;
