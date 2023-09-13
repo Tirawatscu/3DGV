@@ -9,7 +9,6 @@ import platform
 import threading  # Import the threading library
 import random
 import struct
-import smbus
 
 def collect_adc_data(duration):
     global ADC
@@ -184,6 +183,7 @@ if __name__ == '__main__':
         if platform.system() == "Linux":
             import ADS1263
             import RPi.GPIO as GPIO
+            import smbus
 
             REF = 5.08
             ADC = ADS1263.ADS1263()
