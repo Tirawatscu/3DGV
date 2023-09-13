@@ -25,10 +25,29 @@ app = create_app()
 socketio = SocketIO(app)
 
 known_clients = [
-    {'client_id': 'device1', 'status': 'disconnected', 'rssi': None, 'last_updated': None},
-    {'client_id': 'device2', 'status': 'disconnected', 'rssi': None, 'last_updated': None},
-    {'client_id': 'device3', 'status': 'disconnected', 'rssi': None, 'last_updated': None},
+    {'client_id': 'device1', 'status': 'disconnected', 'rssi': None, 'last_updated': None, 'index': 0},
+    {'client_id': 'device2', 'status': 'disconnected', 'rssi': None, 'last_updated': None, 'index': 1},
+    {'client_id': 'device3', 'status': 'disconnected', 'rssi': None, 'last_updated': None, 'index': 2},
 ]
+
+file_data_placeholder = {
+    'metadata': {
+        'timestamp': '',
+        'num_channels': 3,
+        'duration': '',
+        'radius': '',
+        'latitude': '',
+        'longitude': '',
+        'location': '',
+    },
+    'waveform_data': {
+        '0': [],
+        '1': [],
+        '2': [],
+    },
+}
+
+json_name = ''
 
 def custom_json(obj):
     if isinstance(obj, datetime):
@@ -71,11 +90,25 @@ def on_message(mqtt_client, userdata, msg):
                 parsed_data = json.loads(data)
                 actual_data = parsed_data["0"]  # Since your data has a "0" key
                 socketio.emit('update_data', json.dumps({'client_id': client_id, 'data': actual_data}))
-
+                
+                # read json file (json_name)
+                with open(f'{Storage_path}/{json_name}.json') as f:
+                    file_data = json.load(f)
+                    
+                # update json file
+                file_data['waveform_data'][str(client['index'])] = actual_data
+                
+                # write json file
+                with open(f'{Storage_path}/{json_name}.json', 'w') as f:
+                    json.dump(file_data, f)    
+                
+                
 
 @socketio.on('start_collecting')
 def handle_start_collecting(data):
+    global file_data_placeholder, json_name
     start_time = int(time.time()) + 3
+    json_name = start_time
     duration = data.get('duration', 30)
     for client in known_clients:
         if client['status'] == 'connected':
@@ -84,6 +117,17 @@ def handle_start_collecting(data):
                 "duration": duration
             }
             mqtt_client.publish(f"{client['client_id']}/command", json.dumps(command))
+            file_data_placeholder['metadata']['timestamp'] = start_time
+            file_data_placeholder['metadata']['duration'] = duration
+            file_data_placeholder['metadata']['radius'] = data.get('radius', 0)
+            file_data_placeholder['metadata']['latitude'] = data.get('latitude', 0)
+            file_data_placeholder['metadata']['longitude'] = data.get('longitude', 0)
+            file_data_placeholder['metadata']['location'] = data.get('location', '')
+
+            # write json file
+            with open(f'{Storage_path}/{json_name}.json', 'w') as f:
+                json.dump(file_data_placeholder, f)
+            
 
 @app.route('/')
 def index():
