@@ -114,11 +114,21 @@
                 type: 'line'
             }]);
         });
+
         $(document).ready(function () {
             $("#collect-button").click(function () {
                 $("#collect-button").prop("disabled", true);
                 let duration = parseFloat($("#duration").val());
-                socket.emit('start_collecting', { duration: duration });
+                socket.emit(
+                    'start_collecting',
+                    {   
+                        duration: duration,
+                        radius: parseFloat($("#radius").val()),
+                        latitude: parseFloat($("#latitude").val()),
+                        longitude: parseFloat($("#longitude").val()),
+                        location: $("#description").val()
+
+                    });
 
                 // Data Collection Progress bar
                 $("#progress-container-collection").show();
