@@ -50,6 +50,15 @@ file_data_placeholder = {
 
 json_name = ''
 
+def store_event_in_database(timestamp, num_channels, duration, radius, lat, lon, filepath, location, components=None):
+    datetime_string = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+    new_adc_data = AdcData(timestamp=datetime_string, num_channels=num_channels, duration=duration, radius=radius, latitude=lat, longitude=lon, location=location, waveform_file=filepath)
+    db.session.add(new_adc_data)
+    db.session.commit()
+
+    print("Stored event in database")
+
 def custom_json(obj):
     if isinstance(obj, datetime):
         return obj.strftime('%Y-%m-%d %H:%M:%S')
@@ -104,7 +113,6 @@ def on_message(mqtt_client, userdata, msg):
                     json.dump(file_data, f)    
                 
                 
-
 @socketio.on('start_collecting')
 def handle_start_collecting(data):
     global file_data_placeholder, json_name
@@ -118,6 +126,7 @@ def handle_start_collecting(data):
                 "duration": duration
             }
             mqtt_client.publish(f"{client['client_id']}/command", json.dumps(command))
+            
             file_data_placeholder['metadata']['timestamp'] = start_time
             file_data_placeholder['metadata']['duration'] = duration
             file_data_placeholder['metadata']['radius'] = data.get('radius', 0)
@@ -128,11 +137,19 @@ def handle_start_collecting(data):
             # write json file
             with open(f'{Storage_path}/{json_name}.json', 'w') as f:
                 json.dump(file_data_placeholder, f)
+                
+            store_event_in_database(start_time, 3, duration, data.get('radius', 0), data.get('latitude', 0), data.get('longitude', 0), f'{Storage_path}/{json_name}.json', data.get('location', ''))
             
-
+            
 @app.route('/')
 def index():
     return render_template('index.html', clients=known_clients)
+
+@app.route('/tables.html')
+def adc_data():
+    data = AdcData.query.with_entities(AdcData.id, AdcData.timestamp, AdcData.num_channels, AdcData.duration, AdcData.radius, AdcData.latitude, AdcData.longitude, AdcData.location).all()
+    data_dicts = [row._asdict() for row in data]
+    return render_template('tables.html', data=data_dicts)
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()
