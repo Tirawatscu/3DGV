@@ -140,7 +140,7 @@ if __name__ == '__main__':
     mqtt_client = mqtt.Client()
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
-    mqtt_client.connect(config['MQTT']['IP'], config['MQTT']['Port'], 60)
+    mqtt_client.connect(config['MQTT']['IP'], int(config['MQTT']['Port']), 60)
     mqtt_client.loop_start()
     
     socketio.start_background_task(check_client_status)
