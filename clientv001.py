@@ -151,12 +151,12 @@ def publish_rssi():
             QuickStart(bus)
             battery_voltage = read_cw2015_data(bus, CW2015_REG_VCELL)
             battery_capacity = read_cw2015_data(bus, CW2015_REG_SOC)
+            bus.close()
         except Exception as e:
             print(f"Exception: {e}")
             battery_voltage = 0
             battery_capacity = 0
-        finally:
-            bus.close()
+            
         
         if rssi_value is not None and battery_voltage is not None and battery_capacity is not None:
             telemetry = {
@@ -165,7 +165,7 @@ def publish_rssi():
                 'battery_capacity': battery_capacity
             }
             print(f"Publishing RSSI value: {rssi_value} | Battery voltage: {battery_voltage} | Battery capacity: {battery_capacity}")
-            mqtt_client.publish(f"{client_id}/telemetry", telemetry)
+            mqtt_client.publish(f"{client_id}/telemetry", json.dumps(telemetry))
         time.sleep(5)
 
 if __name__ == '__main__':

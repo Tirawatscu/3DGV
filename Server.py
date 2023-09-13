@@ -98,9 +98,9 @@ def on_message(mqtt_client, userdata, msg):
             if data_type == 'telemetry':
                 parsed_data = json.loads(data)
                 client['status'] = 'connected'
-                client['rssi'] = data.get('rssi', None)
-                client['battery_voltage'] = data.get('battery_voltage', None)
-                client['battery_capacity'] = data.get('battery_capacity', None)
+                client['rssi'] = parsed_data.get('rssi', None)
+                client['battery_voltage'] = parsed_data.get('battery_voltage', None)
+                client['battery_capacity'] = parsed_data.get('battery_capacity', None)
                 client['last_updated'] = datetime.now()
             elif data_type == 'data':
                 parsed_data = json.loads(data)
