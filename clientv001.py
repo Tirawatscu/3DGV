@@ -8,6 +8,8 @@ import subprocess
 import platform
 import threading  # Import the threading library
 import random
+import struct
+import smbus
 
 def collect_adc_data(duration):
     global ADC
@@ -62,6 +64,30 @@ def simulate_adc_data(duration):
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
     client.subscribe(f"{client_id}/command")
+
+# Battery read function
+# Battery Module
+CW2015_ADDRESS = 0X62
+CW2015_REG_VCELL = 0X02
+CW2015_REG_SOC = 0X04
+CW2015_REG_MODE = 0X0A
+
+def read_cw2015_data(bus, register):
+    """This function reads data from the CW2015 chip via the provided SMBus object."""
+    try:
+        read = bus.read_word_data(CW2015_ADDRESS, register)
+        swapped = struct.unpack("<H", struct.pack(">H", read))[0]
+        if register == CW2015_REG_VCELL:
+            return swapped * 0.305 / 1000
+        elif register == CW2015_REG_SOC:
+            return swapped / 256
+    except Exception as e:
+        print(f"Exception while reading from CW2015: {e}")
+        return 0
+
+def QuickStart(bus):
+    """This function wakes up the CW2015 and makes a quick-start fuel-gauge calculation."""
+    bus.write_word_data(CW2015_ADDRESS, CW2015_REG_MODE, 0x30)
 
 def get_real_rssi():
     try:
@@ -121,9 +147,26 @@ def on_command(client, userdata, msg):
 def publish_rssi():
     while True:
         rssi_value = get_real_rssi()
-        if rssi_value is not None:
-            print(f"Publishing RSSI value: {rssi_value}")
-            mqtt_client.publish(f"{client_id}/rssi", rssi_value)
+        try:
+            bus = smbus.SMBus(1)
+            QuickStart(bus)
+            battery_voltage = read_cw2015_data(bus, CW2015_REG_VCELL)
+            battery_capacity = read_cw2015_data(bus, CW2015_REG_SOC)
+        except Exception as e:
+            print(f"Exception: {e}")
+            battery_voltage = 0
+            battery_capacity = 0
+        finally:
+            bus.close()
+        
+        if rssi_value is not None and battery_voltage is not None and battery_capacity is not None:
+            telemetry = {
+                'rssi': rssi_value,
+                'battery_voltage': battery_voltage,
+                'battery_capacity': battery_capacity
+            }
+            print(f"Publishing RSSI value: {rssi_value} | Battery voltage: {battery_voltage} | Battery capacity: {battery_capacity}")
+            mqtt_client.publish(f"{client_id}/telemetry", telemetry)
         time.sleep(5)
 
 if __name__ == '__main__':
