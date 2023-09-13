@@ -6,6 +6,7 @@ import time
 import os
 from models import db, AdcData
 import configparser  
+import jsonify
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
 Storage_path = os.path.join(base_dir, 'storage')
@@ -150,6 +151,25 @@ def adc_data():
     data = AdcData.query.with_entities(AdcData.id, AdcData.timestamp, AdcData.num_channels, AdcData.duration, AdcData.radius, AdcData.latitude, AdcData.longitude, AdcData.location).all()
     data_dicts = [row._asdict() for row in data]
     return render_template('tables.html', data=data_dicts)
+
+@app.route('/get_waveform_data', methods=['GET'])
+def get_waveform_data():
+    event_id = request.args.get('id', type=int)
+
+    if not event_id:
+        return jsonify({'error': 'Event ID is required'}), 400
+
+    # Fetch the waveform file path from the database
+    adc_data = db.session.get(AdcData, event_id)
+    if adc_data is None:
+        return jsonify({'error': 'Event not found'}), 404
+    waveform_data = fetch_waveform_data_from_file(adc_data.waveform_file)
+    #print(waveform_data)
+    return jsonify(waveform_data)
+
+def fetch_waveform_data_from_file(filepath):
+    with open(filepath, 'r') as f:
+        return json.load(f)
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()
