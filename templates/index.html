@@ -39,6 +39,7 @@
         <main class="content mt-4">
             <h1 class="text-center">Connected Clients</h1>
             <div id="clientsTable" class="mb-4"></div>
+            <div id="clientsDataPlot" class="mb-4"></div>
             <div class="col-12">
                 <div class="card card-chart">
                     <div class="card-header ">
@@ -118,6 +119,11 @@
             console.log("Connected!");
         });
 
+        var rssiData = [];
+        var batteryVoltageData = [];
+        var batteryCapacityData = [];
+        var timeData = [];
+        
         socket.on('update_clients', function(data) {
             var clients = JSON.parse(data);
             var table = '<table class="table table-bordered text-center"><thead><tr><th>Client ID</th><th>Status</th><th>RSSI</th><th>Bat_Volt v.</th><th>Bat_Cap %</th><th>Last Updated</th></tr></thead><tbody>';
@@ -125,10 +131,47 @@
                 var battery_voltage = parseFloat(clients[i].battery_voltage).toFixed(2);
                 var battery_capacity = parseFloat(clients[i].battery_capacity).toFixed(2);
                 table += '<tr><td>' + clients[i].client_id + '</td><td>' + clients[i].status + '</td><td>' + clients[i].rssi + '</td><td>' + battery_voltage + '</td><td>' + battery_capacity + '</td><td>' + clients[i].last_updated + '</td></tr>';
+        
+                // Collect data for plotting
+                rssiData.push(clients[i].rssi);
+                batteryVoltageData.push(battery_voltage);
+                batteryCapacityData.push(battery_capacity);
+                timeData.push(clients[i].last_updated);
             }
             table += '</tbody></table>';
             document.getElementById("clientsTable").innerHTML = table;
+        
+            // Plotting the data
+            var traces = [{
+                x: timeData,
+                y: rssiData,
+                mode: 'lines+markers',
+                name: 'RSSI'
+            }, {
+                x: timeData,
+                y: batteryVoltageData,
+                mode: 'lines+markers',
+                name: 'Battery Voltage'
+            }, {
+                x: timeData,
+                y: batteryCapacityData,
+                mode: 'lines+markers',
+                name: 'Battery Capacity'
+            }];
+        
+            var layout = {
+                title: 'Client Data Over Time',
+                xaxis: {
+                    title: 'Time'
+                },
+                yaxis: {
+                    title: 'Value'
+                }
+            };
+        
+            Plotly.newPlot('clientsDataPlot', traces, layout);
         });
+        
         
         
 
