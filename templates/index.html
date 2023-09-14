@@ -39,7 +39,12 @@
         <main class="content mt-4">
             <h1 class="text-center">Connected Clients</h1>
             <div id="clientsTable" class="mb-4"></div>
-            <div id="clientsDataPlot" class="mb-4"></div>
+            <div class="row">
+                <div class="col-4"><div id="rssiPlot" class="mb-4"></div></div>
+                <div class="col-4"><div id="batteryVoltagePlot" class="mb-4"></div></div>
+                <div class="col-4"><div id="batteryCapacityPlot" class="mb-4"></div></div>
+            </div>
+            
             <div class="col-12">
                 <div class="card card-chart">
                     <div class="card-header ">
@@ -124,43 +129,49 @@
         var batteryCapacityData = [];
         var timeData = [];
         
+        // Initialize arrays to hold data for each device and each parameter
+        var dataByDevice = {};
+
         socket.on('update_clients', function(data) {
             var clients = JSON.parse(data);
             var table = '<table class="table table-bordered text-center"><thead><tr><th>Client ID</th><th>Status</th><th>RSSI</th><th>Bat_Volt v.</th><th>Bat_Cap %</th><th>Last Updated</th></tr></thead><tbody>';
-            for (var i = 0; i < clients.length; i++) {
-                var battery_voltage = parseFloat(clients[i].battery_voltage).toFixed(2);
-                var battery_capacity = parseFloat(clients[i].battery_capacity).toFixed(2);
-                table += '<tr><td>' + clients[i].client_id + '</td><td>' + clients[i].status + '</td><td>' + clients[i].rssi + '</td><td>' + battery_voltage + '</td><td>' + battery_capacity + '</td><td>' + clients[i].last_updated + '</td></tr>';
-        
-                // Collect data for plotting
-                rssiData.push(clients[i].rssi);
-                batteryVoltageData.push(battery_voltage);
-                batteryCapacityData.push(battery_capacity);
-                timeData.push(clients[i].last_updated);
-            }
+            
+            clients.forEach(function(client) {
+                var clientId = client.client_id;
+                if (!dataByDevice[clientId]) {
+                    dataByDevice[clientId] = { rssi: [], batteryVoltage: [], batteryCapacity: [], time: [] };
+                }
+                
+                dataByDevice[clientId].rssi.push(client.rssi);
+                dataByDevice[clientId].batteryVoltage.push(parseFloat(client.battery_voltage).toFixed(2));
+                dataByDevice[clientId].batteryCapacity.push(parseFloat(client.battery_capacity).toFixed(2));
+                dataByDevice[clientId].time.push(client.last_updated);
+
+                table += '<tr><td>' + clientId + '</td><td>' + client.status + '</td><td>' + client.rssi + '</td><td>' + client.battery_voltage + '</td><td>' + client.battery_capacity + '</td><td>' + client.last_updated + '</td></tr>';
+            });
+            
             table += '</tbody></table>';
             document.getElementById("clientsTable").innerHTML = table;
-        
-            // Plotting the data
-            var traces = [{
-                x: timeData,
-                y: rssiData,
-                mode: 'lines+markers',
-                name: 'RSSI'
-            }, {
-                x: timeData,
-                y: batteryVoltageData,
-                mode: 'lines+markers',
-                name: 'Battery Voltage'
-            }, {
-                x: timeData,
-                y: batteryCapacityData,
-                mode: 'lines+markers',
-                name: 'Battery Capacity'
-            }];
-        
+
+            // Plotting
+            plotData('rssiPlot', 'RSSI', 'rssi');
+            plotData('batteryVoltagePlot', 'Battery Voltage', 'batteryVoltage');
+            plotData('batteryCapacityPlot', 'Battery Capacity', 'batteryCapacity');
+        });
+
+        function plotData(divId, title, key) {
+            var traces = [];
+            for (var clientId in dataByDevice) {
+                traces.push({
+                    x: dataByDevice[clientId].time,
+                    y: dataByDevice[clientId][key],
+                    mode: 'lines+markers',
+                    name: 'Device ' + clientId
+                });
+            }
+            
             var layout = {
-                title: 'Client Data Over Time',
+                title: title,
                 xaxis: {
                     title: 'Time'
                 },
@@ -168,9 +179,10 @@
                     title: 'Value'
                 }
             };
-        
-            Plotly.newPlot('clientsDataPlot', traces, layout);
-        });
+
+            Plotly.newPlot(divId, traces, layout);
+        }
+
         
         
         
