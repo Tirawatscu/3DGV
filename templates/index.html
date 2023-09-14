@@ -147,7 +147,7 @@
                 dataByDevice[clientId].batteryCapacity.push(parseFloat(client.battery_capacity).toFixed(2));
                 dataByDevice[clientId].time.push(client.last_updated);
 
-                table += '<tr><td>' + clientId + '</td><td>' + client.status + '</td><td>' + client.rssi + '</td><td>' + dataByDevice[clientId].batteryVoltage + '</td><td>' + dataByDevice[clientId].batteryCapacity + '</td><td>' + client.last_updated + '</td></tr>';
+                table += '<tr><td>' + clientId + '</td><td>' + client.status + '</td><td>' + client.rssi + '</td><td>' + parseFloat(client.battery_voltage).toFixed(2) + '</td><td>' + parseFloat(client.battery_capacity).toFixed(2) + '</td><td>' + client.last_updated + '</td></tr>';
             });
             
             table += '</tbody></table>';
