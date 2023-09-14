@@ -38,8 +38,7 @@
         
 
         <div class="row justify-content-center">
-            <h1 class="text-center">Connected Clients</h1>
-            <div id="clientsTable" class="mb-4"></div>
+            
             <div class="col-md-12">
                 <div class="card mt-4">
                     <div class="card-header text-center">
@@ -107,18 +106,6 @@
     </div>
 
     <script>
-        socket.on('update_clients', function(data) {
-            var clients = JSON.parse(data);
-            var table = "<table><tr><th>Client ID</th><th>Status</th><th>RSSI</th><th>Bat_Volt v.</th><th>Bat_Cap %</th><th>Last Updated</th></tr>";
-            for (var i = 0; i < clients.length; i++) {
-                var battery_voltage = parseFloat(clients[i].battery_voltage).toFixed(2);
-                var battery_capacity = parseFloat(clients[i].battery_capacity).toFixed(2);
-                table += "<tr><td>" + clients[i].client_id + "</td><td>" + clients[i].status + "</td><td>" + clients[i].rssi + "</td><td>" + battery_voltage + "</td><td>" + battery_capacity + "</td><td>" + clients[i].last_updated + "</td></tr>";
-            }
-            table += "</table>";
-            document.getElementById("clientsTable").innerHTML = table;
-        });
-
         $(document).ready(function() {
             $('.zoom-split').click(function() {
                 let id = $(this).data('id');
