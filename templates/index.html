@@ -17,7 +17,7 @@
     <div class="container">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container-fluid">
-                <a class="navbar-brand" href="#">Connected Clients</a>
+                <a class="navbar-brand" href="#">GVWAVE V2</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -122,11 +122,14 @@
             var clients = JSON.parse(data);
             var table = "<table><tr><th>Client ID</th><th>Status</th><th>RSSI</th><th>Bat_Volt v.</th><th>Bat_Cap %</th><th>Last Updated</th></tr>";
             for (var i = 0; i < clients.length; i++) {
-                table += "<tr><td>" + clients[i].client_id + "</td><td>" + clients[i].status + "</td><td>" + clients[i].rssi + "</td><td>" + clients[i].battery_voltage + "</td><td>" + clients[i].battery_capacity + "</td><td>" +clients[i].last_updated + "</td></tr>";
+                var battery_voltage = parseFloat(clients[i].battery_voltage).toFixed(2);
+                var battery_capacity = parseFloat(clients[i].battery_capacity).toFixed(2);
+                table += "<tr><td>" + clients[i].client_id + "</td><td>" + clients[i].status + "</td><td>" + clients[i].rssi + "</td><td>" + battery_voltage + "</td><td>" + battery_capacity + "</td><td>" + clients[i].last_updated + "</td></tr>";
             }
             table += "</table>";
             document.getElementById("clientsTable").innerHTML = table;
         });
+        
 
         socket.on('update_data', function(data) {
             var parsedData = JSON.parse(data);
