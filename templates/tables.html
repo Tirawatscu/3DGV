@@ -98,6 +98,12 @@
                                             <div id="waveform-plot-{{ row.id }}" class="waveform-plot"></div>
                                         </td>
                                     </tr>
+                                    <tr id="dispersion-row-{{ row.id }}" style="display: none;">
+                                        <td colspan="5">
+                                            <div id="dispersion-plot-{{ row.id }}" class="dispersion-plot"></div>
+                                        </td>
+                                    </tr>
+                                    
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -125,7 +131,6 @@
                 }
             });
         });
-        
         
         $(window).resize(function() {
             var update = {
@@ -273,9 +278,45 @@
             formGroup.append(label, input);
             return formGroup;
         }
+
         function downloadWaveformData(id) {
             window.location.href = "/download_waveform_data?id=" + id;
         }
+
+        function plotPop(id) {
+            // Call the backend API to get the frequency and velocity data
+            fetch(`/plot_pop?id=${id}`)
+            .then(response => response.json())
+            .then(data => {
+                // Use Plotly to plot the data
+                var trace = {
+                    x: data.frequency,
+                    y: data.velocity,
+                    mode: 'lines',
+                    type: 'scatter'
+                };
+        
+                var layout = {
+                    xaxis: {
+                        range: [0, 15],
+                        title: 'Frequency'
+                    },
+                    yaxis: {
+                        range: [0, 600],
+                        title: 'Velocity'
+                    }
+                };
+        
+                var plotData = [trace];
+                
+                // Target the specific div for this id
+                Plotly.newPlot(`dispersion-plot-${id}`, plotData, layout);
+                
+                // Show the plot (assuming it starts hidden)
+                document.getElementById(`dispersion-row-${id}`).style.display = "table-row";
+            });
+        }
+        
     </script>
 
     <!-- Bootstrap JS (Optional) -->

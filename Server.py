@@ -5,7 +5,9 @@ from datetime import datetime, timedelta
 import time
 import os
 from models import db, AdcData
-import configparser  
+import configparser
+import numpy as np
+from PyPOP import POP
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
 Storage_path = os.path.join(base_dir, 'storage')
@@ -175,6 +177,30 @@ def get_waveform_data():
 def fetch_waveform_data_from_file(filepath):
     with open(filepath, 'r') as f:
         return json.load(f)
+    
+@app.route('/plot_pop', methods=['GET'])
+def plot_pop():
+    event_id = request.args.get('id', type=int)
+    
+    if not event_id:
+        return jsonify({'error': 'Event ID is required'}), 400
+    
+    # Fetch the waveform file path from the database
+    adc_data = db.session.get(AdcData, event_id)
+    
+    with open(adc_data.waveform_file, 'r') as f:
+        data = json.load(f)
+    
+    waveform_data = data['waveform_data']
+    component_0 = waveform_data['0']
+    component_1 = waveform_data['1']
+    component_2 = waveform_data['2']
+
+    vert = np.array([component_0, component_1, component_2]).T
+    pop = POP(vert, [], [], adc_data.radius, 128, 4096)
+    F, C, C2 = pop.makepop()
+    
+    return jsonify({'frequency': F.tolist(), 'velocity': C.tolist()})
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()
