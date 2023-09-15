@@ -314,7 +314,10 @@
                 
                 // Show the plot (assuming it starts hidden)
                 document.getElementById(`dispersion-row-${id}`).style.display = "table-row";
-            });
+            }).
+            catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+              });
         }
         
     </script>

@@ -198,7 +198,7 @@ def plot_pop():
     component_2 = waveform_data['2']
 
     vert = np.array([component_0, component_1, component_2]).T
-    pop = POP(vert, [], [], adc_data.radius, 128, 4096)
+    pop = POP(vert, [], [], adc_data.radius, 128, 3000)
     F, C, C2 = pop.makepop()
     
     return jsonify({'frequency': F.tolist(), 'velocity': C.tolist()})
