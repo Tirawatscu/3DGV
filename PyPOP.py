@@ -26,6 +26,7 @@ class POP():
               SN = SN + 1
               KR = KR + sqrt(2*(var(P,axis=1)))
         KR = KR/SN
+        KR[KR == 0] = 1e-10  # replace zero with a very small value
         C  = 2*pi*self.radius*self.F/KR
         C2 = 2*pi*self.radius*self.F/(pi/1.5)
         return self.F, C, C2
