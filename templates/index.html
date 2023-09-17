@@ -186,10 +186,6 @@
             Plotly.newPlot(divId, traces, layout);
         }
 
-        
-        
-        
-
         socket.on('update_data', function(data) {
             var parsedData = JSON.parse(data);
             var clientId = parsedData.client_id;
@@ -205,6 +201,8 @@
             $("#collect-button").click(function () {
                 $("#collect-button").prop("disabled", true);
                 let duration = parseFloat($("#duration").val());
+                let startTime = Math.floor(new Date().getTime() / 1000);  // Current time in seconds
+                
                 socket.emit(
                     'start_collecting',
                     {   
@@ -213,32 +211,44 @@
                         latitude: parseFloat($("#latitude").val()),
                         longitude: parseFloat($("#longitude").val()),
                         location: $("#description").val()
-
-                    });
-
-                // Data Collection Progress bar
-                $("#progress-container-collection").show();
-                let progressCollection = 0;
-                let progressBarCollection = $("#progress-bar-collection");
-                let progressTextCollection = $("#progress-text-collection");
-                let progressIntervalCollection = setInterval(function () {
-                    progressCollection += 100 * 0.1 / (duration + 3);
-                    if (progressCollection >= 100) {
-                        progressCollection = 100;
                     }
-                    progressBarCollection.css("width", progressCollection + "%");
-                    progressTextCollection.html(progressCollection.toFixed(0) + "%");
-                }, 100);
-
-                setTimeout(function () {
-                    clearInterval(progressIntervalCollection);
-                    progressBarCollection.css("width", "0%");
-                    progressTextCollection.html("0%");
-                    $("#progress-container-collection").hide();
-                    $("#collect-button").prop("disabled", false);
-                }, (duration + 3) * 1000);  // Convert to milliseconds
+                );
+        
+                startProgressBar(startTime, duration);
             });
         });
+        
+        function startProgressBar(startTime, duration) {
+            // Data Collection Progress bar
+            $("#progress-container-collection").show();
+            let progressBarCollection = $("#progress-bar-collection");
+            let progressTextCollection = $("#progress-text-collection");
+        
+            let endTime = startTime + duration;
+        
+            let progressIntervalCollection = setInterval(function () {
+                let currentTime = Math.floor(new Date().getTime() / 1000);  // Current time in seconds
+                let elapsedTime = currentTime - startTime;
+                let progressCollection = (elapsedTime / duration) * 100;
+        
+                if (progressCollection >= 100) {
+                    progressCollection = 100;
+                    clearInterval(progressIntervalCollection);
+                }
+                
+                progressBarCollection.css("width", progressCollection + "%");
+                progressTextCollection.html(progressCollection.toFixed(0) + "%");
+            }, 1000);  // Update every second
+        
+            setTimeout(function () {
+                clearInterval(progressIntervalCollection);
+                progressBarCollection.css("width", "0%");
+                progressTextCollection.html("0%");
+                $("#progress-container-collection").hide();
+                $("#collect-button").prop("disabled", false);
+            }, (duration + 3) * 1000);  // Convert to milliseconds
+        }
+        
     </script>
 </body>
 
