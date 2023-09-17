@@ -236,7 +236,7 @@ def plot_pop():
     
     # Fetch the waveform file path from the database
     adc_data = db.session.get(AdcData, event_id)
-    print(adc_data)
+    #print(adc_data)
     
     with open(adc_data.waveform_file, 'r') as f:
         data = json.load(f)
