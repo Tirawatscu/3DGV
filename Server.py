@@ -178,6 +178,38 @@ def fetch_waveform_data_from_file(filepath):
     with open(filepath, 'r') as f:
         return json.load(f)
     
+@app.route('/update_event', methods=['POST'])
+def update_event():
+    # Retrieve the updated data from the request
+    event_id = request.form.get('id')
+    num_channels = request.form.get('num_channels')
+    duration = request.form.get('duration')
+    radius = request.form.get('radius')
+    latitude = request.form.get('latitude')
+    longitude = request.form.get('longitude')
+    location = request.form.get('location')
+
+    try:
+        # Update the data in the SQLite database
+        event = db.session.get(AdcData, event_id)
+        if event is None:
+            return jsonify(status="error", message="No such event")
+
+        event.num_channels = num_channels
+        event.duration = duration
+        event.radius = radius
+        event.latitude = latitude
+        event.longitude = longitude
+        event.location = location
+
+        db.session.commit()
+
+        return jsonify(status="success")
+
+    except Exception as e:
+        print(e)
+        return jsonify(status="error")    
+
 @app.route('/plot_pop', methods=['GET'])
 def plot_pop():
     event_id = request.args.get('id', type=int)
