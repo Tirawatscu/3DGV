@@ -178,6 +178,23 @@ def fetch_waveform_data_from_file(filepath):
     with open(filepath, 'r') as f:
         return json.load(f)
     
+@app.route('/delete_event', methods=['POST'])
+def delete_event():
+    event_id = request.form['id']
+    
+    try:
+        adc_data = db.session.get(AdcData, event_id)
+        if adc_data:
+            os.remove(adc_data.waveform_file)  # Delete the waveform file
+            db.session.delete(adc_data)
+
+        db.session.commit()
+        
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(e)
+        return jsonify({'status': 'error'})
+    
 @app.route('/update_event', methods=['POST'])
 def update_event():
     # Retrieve the updated data from the request
