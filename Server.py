@@ -252,6 +252,70 @@ def plot_pop():
     
     return jsonify({'frequency': F.tolist(), 'velocity': C.tolist()})
 
+@app.route('/merge_events', methods=['POST'])
+def merge_events():
+    try:
+        event_ids = request.form.get('ids')
+        event_ids = json.loads(event_ids)  # Convert the JSON string back to a list
+
+        if not event_ids or len(event_ids) < 2:
+            return jsonify({'status': 'error', 'message': 'At least two events must be selected for merging.'})
+
+        merged_event_data, metadata = merge_waveforms(event_ids)
+
+        # Create a new JSON file to store the merged event data
+        timestamp = int(time.time())
+        json_name = timestamp
+        json_path = os.path.join(Storage_path, f"{json_name}.json")
+        
+        merged_event = {
+            'metadata': metadata,
+            'waveform_data': merged_event_data
+        }
+
+        with open(json_path, 'w') as f:
+            json.dump(merged_event, f)
+
+        # Store the merged event in the database
+        store_event_in_database(
+            timestamp=timestamp,
+            num_channels=metadata['num_channels'],
+            duration=metadata['duration'],
+            radius=metadata['radius'],
+            lat=metadata['latitude'],
+            lon=metadata['longitude'],
+            filepath=json_path,
+            location=metadata['location']
+        )
+
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(e)
+        return jsonify({'status': 'error'})
+    
+def merge_waveforms(event_ids):
+    # Initialize empty lists to store waveforms for each channel
+    waveforms = {'0': [], '1': [], '2': []}
+    metadata = None
+
+    for event_id in event_ids:
+        # Fetch the waveform file path from the database
+        adc_data = db.session.get(AdcData, event_id)
+        if adc_data is None:
+            continue  # Skip if not found
+
+        with open(adc_data.waveform_file, 'r') as f:
+            data = json.load(f)
+        
+        if metadata is None:
+            metadata = data['metadata']
+
+        for channel, waveform in data['waveform_data'].items():
+            waveforms[channel].extend(waveform)
+    
+    return waveforms, metadata
+
+
 if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')

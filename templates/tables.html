@@ -107,6 +107,9 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
+                            <!-- Place this somewhere suitable in your HTML -->
+                            <button id="merge-button" class="btn btn-primary" style="display: none;">Merge Selected</button>
+
                         </div>
                     </div>
                 </div>
@@ -319,6 +322,41 @@
                 console.error('There was a problem with the fetch operation:', error);
               });
         }
+
+        $(document).ready(function () {
+            let selectedIds = [];
+        
+            $(".form-check-input").change(function () {
+                const row = $(this).closest("tr");
+                const id = row.find(".delete-event").data("id");
+        
+                if ($(this).is(":checked")) {
+                    selectedIds.push(id);
+                } else {
+                    const index = selectedIds.indexOf(id);
+                    if (index > -1) {
+                        selectedIds.splice(index, 1);
+                    }
+                }
+        
+                if (selectedIds.length > 1) {
+                    $("#merge-button").show();
+                } else {
+                    $("#merge-button").hide();
+                }
+            });
+        
+            $("#merge-button").click(function () {
+                $.post("/merge_events", { ids: JSON.stringify(selectedIds) }, function (response) {
+                    if (response.status === "success") {
+                        location.reload();
+                    } else {
+                        alert("An error occurred while merging the events. Please try again.");
+                    }
+                });
+            });
+        });
+        
         
     </script>
 
