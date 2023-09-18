@@ -311,7 +311,9 @@ def merge_waveforms(event_ids):
         if metadata is None:
             metadata = data['metadata']
 
-        total_duration += metadata['duration']  # Summing up the durations
+        # Add the duration of this specific event to the total_duration
+        event_metadata = data['metadata']
+        total_duration += event_metadata['duration']
 
         for channel, waveform in data['waveform_data'].items():
             waveforms[channel].extend(waveform)
@@ -320,6 +322,7 @@ def merge_waveforms(event_ids):
     metadata['location'] += "_merged"  # Add '_merged' suffix to the location
 
     return waveforms, metadata
+
 
 
 
