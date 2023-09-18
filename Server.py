@@ -280,12 +280,12 @@ def merge_events():
         store_event_in_database(
             timestamp=timestamp,
             num_channels=metadata['num_channels'],
-            duration=metadata['duration'],
+            duration=metadata['duration'],  # Updated duration
             radius=metadata['radius'],
             lat=metadata['latitude'],
             lon=metadata['longitude'],
             filepath=json_path,
-            location=metadata['location']
+            location=metadata['location']  # Updated location with '_merged'
         )
 
         return jsonify({'status': 'success'})
@@ -297,6 +297,7 @@ def merge_waveforms(event_ids):
     # Initialize empty lists to store waveforms for each channel
     waveforms = {'0': [], '1': [], '2': []}
     metadata = None
+    total_duration = 0
 
     for event_id in event_ids:
         # Fetch the waveform file path from the database
@@ -310,10 +311,16 @@ def merge_waveforms(event_ids):
         if metadata is None:
             metadata = data['metadata']
 
+        total_duration += metadata['duration']  # Summing up the durations
+
         for channel, waveform in data['waveform_data'].items():
             waveforms[channel].extend(waveform)
     
+    metadata['duration'] = total_duration  # Update the metadata with the total duration
+    metadata['location'] += "_merged"  # Add '_merged' suffix to the location
+
     return waveforms, metadata
+
 
 
 if __name__ == '__main__':
