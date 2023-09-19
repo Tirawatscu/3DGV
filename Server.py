@@ -252,6 +252,27 @@ def plot_pop():
     
     return jsonify({'frequency': F.tolist(), 'velocity': C.tolist()})
 
+@app.route('/download_waveform_data', methods=['GET'])
+def download_waveform_data():
+    event_id = request.args.get('id', type=int)
+    
+    if not event_id:
+        return jsonify({'error': 'Event ID is required'}), 400
+
+    adc_data = db.session.get(AdcData, event_id)
+    if adc_data is None:
+        return jsonify({'error': 'Event not found'}), 404
+
+    full_data = fetch_waveform_data_from_file(adc_data.waveform_file)
+    
+    if not full_data:
+        return jsonify({'error': 'No data found'}), 404
+
+    response = jsonify(full_data)
+    response.headers.set('Content-Disposition', f'attachment; filename=waveform_data_{event_id}.json')
+    response.headers.set('Content-Type', 'application/json')
+    return response
+
 @app.route('/merge_events', methods=['POST'])
 def merge_events():
     try:
