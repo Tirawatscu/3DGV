@@ -230,6 +230,7 @@ def update_event():
 @app.route('/plot_pop', methods=['GET'])
 def plot_pop():
     event_id = request.args.get('id', type=int)
+    segment_length = request.args.get('segment_length', type=int)
     
     if not event_id:
         return jsonify({'error': 'Event ID is required'}), 400
@@ -247,10 +248,42 @@ def plot_pop():
     component_2 = waveform_data['2']
 
     vert = np.array([component_0, component_1, component_2]).T
-    pop = POP(vert, [], [], adc_data.radius, 128, 3000)
+    pop = POP(vert, [], [], adc_data.radius, 128, segment_length)
     F, C, C2 = pop.makepop()
     
     return jsonify({'frequency': F.tolist(), 'velocity': C.tolist()})
+
+@app.route('/get_image_data', methods=['GET'])
+def get_image_data():
+    event_id = request.args.get('id', type=int)
+    segment_length = request.args.get('segment_length', type=int)
+    Fmin = request.args.get('Fmin', type=int)
+    Fmax = request.args.get('Fmax', type=int)
+    Vmin = request.args.get('Vmin', type=int)
+    Vmax = request.args.get('Vmax', type=int)
+    Res = request.args.get('Resolution', type=int)
+    
+    if not event_id:
+        return jsonify({'error': 'Event ID is required'}), 400
+    
+    # Fetch the waveform file path from the database
+    adc_data = db.session.get(AdcData, event_id)
+    #print(adc_data)
+    
+    with open(adc_data.waveform_file, 'r') as f:
+        data = json.load(f)
+    
+    waveform_data = data['waveform_data']
+    component_0 = waveform_data['0']
+    component_1 = waveform_data['1']
+    component_2 = waveform_data['2']
+
+    vert = np.array([component_0, component_1, component_2]).T
+    pop = POP(vert, [], [], adc_data.radius, 128, segment_length)
+    ds, f, vs, norm = pop.imagPop(Fmin=Fmin, Fmax=Fmax, vmin=Vmin, vmax=Vmax, resolustion=Res)
+    
+    return jsonify({'ds': ds.tolist(), 'f': f.tolist(), 'vs': vs.tolist()})
+
 
 @app.route('/download_waveform_data', methods=['GET'])
 def download_waveform_data():
@@ -272,6 +305,43 @@ def download_waveform_data():
     response.headers.set('Content-Disposition', f'attachment; filename=waveform_data_{event_id}.json')
     response.headers.set('Content-Type', 'application/json')
     return response
+
+@app.route('/store_uploaded_data', methods=['POST'])
+def store_uploaded_data():
+    data = request.json
+    metadata = data['metadata']
+    waveform_data = data['waveform_data']
+
+    filepath = f'{Storage_path}/{metadata["location"]}.json'
+    file_uploaded = {
+        'metadata': {
+            'timestamp': int(time.time()),
+            'num_channels': len(waveform_data),
+            'duration': metadata['duration'],
+            'radius': metadata['radius'],
+            'latitude': metadata['latitude'],
+            'longitude': metadata['longitude'],
+            'location': metadata['location'],
+            },
+        'waveform_data': waveform_data
+    }
+    with open(filepath, 'w') as jsonfile:
+        json.dump(file_uploaded, jsonfile)
+
+    adc_data = AdcData(
+        timestamp=int(time.time()),
+        num_channels=len(waveform_data),
+        duration=metadata['duration'],
+        radius=metadata['radius'],
+        latitude=metadata['latitude'],
+        longitude=metadata['longitude'],
+        location=metadata['location'],
+        waveform_file=filepath
+    )
+    db.session.add(adc_data)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Data stored successfully'})
 
 @app.route('/merge_events', methods=['POST'])
 def merge_events():

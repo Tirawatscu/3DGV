@@ -14,7 +14,7 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#">GVWAVE V2</a>
@@ -111,6 +111,7 @@
                   </div>
             </div>
             <h2>Data</h2>
+            <div id="plot"></div>
             <div id="device1_plot"></div>
             <div id="device2_plot"></div>
             <div id="device3_plot"></div>
@@ -248,6 +249,104 @@
                 $("#collect-button").prop("disabled", false);
             }, (duration + 3) * 1000);  // Convert to milliseconds
         }
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = (event) => resolve(event.target.result);
+              reader.onerror = (error) => reject(error);
+              reader.readAsText(file);
+            });
+          }
+  
+          // Modify the existing code inside the $(document).ready(function() { ... });
+          $("#upload_data").click(function () {
+            $("#file-input").click();
+          });
+  
+          $("#file-input").change(async function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+          
+            try {
+              const jsonText = await readFile(file);
+              const data = JSON.parse(jsonText);
+              uploadedWaveformData = data.waveform_data;
+              // Update form fields with the metadata from the JSON file
+              const metadata = data.metadata;
+              $("#duration").val(metadata.duration);
+              $("#radius").val(metadata.radius);
+              $("#latitude").val(metadata.latitude);
+              $("#longitude").val(metadata.longitude);
+              $("#description").val(metadata.location);
+          
+              // Update the plot with the waveform data from the JSON file
+              const waveform_data = data.waveform_data;
+              const traces = [];
+          
+              for (const channel in waveform_data) {
+                traces.push({
+                  
+                  y: waveform_data[channel],
+                  mode: 'lines',
+                  name: `Channel ${channel}`
+                });
+              }
+          
+              const layout = {
+                title: 'Waveform Data',
+                xaxis: { title: 'Time (s)' },
+                yaxis: { title: 'Amplitude' },
+                autosize: true, // Use "true" instead of "True"
+                height: 600,
+                width: null, // Use "null" instead of "None"
+                legend: {
+                  x: 0.85,
+                  y: 0.95
+                }
+              };
+          
+              Plotly.newPlot("plot", traces, layout);
+          
+              // Show the "Confirm" button
+          $("#confirm_data").show();
+            } catch (error) {
+              console.error("Error reading or parsing the JSON file:", error);
+            }
+          });
+            $("#confirm_data").click(function () {
+              console.log("confirm_data clicked");
+              const duration = parseFloat($("#duration").val());
+              const radius = parseFloat($("#radius").val());
+              const latitude = parseFloat($("#latitude").val());
+              const longitude = parseFloat($("#longitude").val());
+              const location = $("#description").val()
+  
+              const requestData = {
+                metadata: {
+                  duration: duration,
+                  radius: radius,
+                  latitude: latitude,
+                  longitude: longitude,
+                  location: location,
+                },
+                waveform_data: uploadedWaveformData
+              };
+  
+              $.ajax({
+                url: '/store_uploaded_data',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(requestData),
+                success: function(response) {
+                  console.log('Data stored successfully:', response);
+                },
+                error: function(error) {
+                  console.error('Error storing data:', error);
+                }
+              });
+            });
+
         
     </script>
 </body>

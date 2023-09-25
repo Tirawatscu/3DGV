@@ -3,6 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Connected Clients</title>
     <!-- Bootstrap CSS -->
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
@@ -12,10 +14,18 @@
     <script src="../static/js/socket.io.min.js"></script>
     <script src="../static/js/plotly-latest.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        .waveform-plot, .dispersion-plot {
+            width: 100%;
+            height: 600px;  /* You can adjust this value */
+            margin: 5px auto;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#">Connected Clients</a>
@@ -37,7 +47,7 @@
         </nav>
         
 
-        <div class="row justify-content-center">
+        <div class="row justify-content-center mt-4">
             
             <div class="col-md-12">
                 <div class="card mt-4">
@@ -86,7 +96,7 @@
                                                 <button type="button" rel="tooltip" title="" class="btn btn-link download-event" data-original-title="Download" data-id="{{ row.id }}" onclick="downloadWaveformData({{ row.id }});">
                                                     <i class="fa fa-download"></i>
                                                 </button>
-                                                <button type="button" rel="tooltip" title="" class="btn btn-link area-chart" data-original-title="Plot Wave" data-id="{{ row.id }}" onclick="plotPop({{ row.id }});">
+                                                <button type="button" rel="tooltip" title="" class="btn btn-link area-chart" data-original-title="Plot Wave" data-id="{{ row.id }}">
                                                     <i class="fa fa-area-chart"></i>
                                                 </button>
                                             </td>
@@ -94,15 +104,96 @@
                                       </td>
                                     </tr>
                                     <tr id="waveform-row-{{ row.id }}" style="display: none;">
-                                        <td colspan="5">
+                                        <td colspan="12">
                                             <div id="waveform-plot-{{ row.id }}" class="waveform-plot"></div>
                                         </td>
                                     </tr>
                                     <tr id="dispersion-row-{{ row.id }}" style="display: none;">
-                                        <td colspan="5">
-                                            <div id="dispersion-plot-{{ row.id }}" class="dispersion-plot"></div>
+                                        <td colspan="12">
+                                            <div class="d-flex">
+                                                <!-- Dispersion Plot -->
+                                                <div id="dispersion-plot-{{ row.id }}" class="dispersion-plot flex-grow-1 mr-5"></div>
+                                    
+                                                <!-- Dispersion Curve Settings -->
+                                                <div class="d-flex ml-5">
+                                                    <!-- First Column -->
+                                                    <div class="d-flex flex-column mr-5">
+                                                        <div class="form-group">
+                                                            <label for="plot-style-{{ row.id }}">Plotting Style</label>
+                                                            <select class="form-control" id="plot-style-{{ row.id }}">
+                                                                <option value="lines">Line Plot</option>
+                                                                <option value="markers">Point Plot</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="plot-color-{{ row.id }}">Plotting Color</label>
+                                                            <input type="color" class="form-control" id="plot-color-{{ row.id }}" value="#000000">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="x-min-{{ row.id }}">X Min</label>
+                                                            <input type="number" class="form-control" id="x-min-{{ row.id }}" placeholder="0">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="x-max-{{ row.id }}">X Max</label>
+                                                            <input type="number" class="form-control" id="x-max-{{ row.id }}" placeholder="15">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="y-min-{{ row.id }}">Y Min</label>
+                                                            <input type="number" class="form-control" id="y-min-{{ row.id }}" placeholder="0">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="y-max-{{ row.id }}">Y Max</label>
+                                                            <input type="number" class="form-control" id="y-max-{{ row.id }}" placeholder="600">
+                                                        </div>
+                                                    </div>
+                                    
+                                                    <!-- Second Column -->
+                                                    <div class="d-flex flex-column mr-2">
+                                                        <div class="form-group">
+                                                            <label for="segment-length-{{ row.id }}">Segment Length</label>
+                                                            <input type="number" class="form-control" id="segment-length-{{ row.id }}" placeholder="3000" value="3000">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="Fmin-{{ row.id }}">Freq min</label>
+                                                            <input type="number" class="form-control" id="Fmin-{{ row.id }}" placeholder="1" value="1">
+                                                        </div>
+                                                        
+                                                        <div class="form-group">
+                                                            <label for="Fmax-{{ row.id }}">Freq max</label>
+                                                            <input type="number" class="form-control" id="Fmax-{{ row.id }}" placeholder="12" value="12">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="Vmin-{{ row.id }}">V min</label>
+                                                            <input type="number" class="form-control" id="Vmin-{{ row.id }}" placeholder="0" value="0">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="Vmax-{{ row.id }}">V max</label>
+                                                            <input type="number" class="form-control" id="Vmax-{{ row.id }}" placeholder="600" value="600">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="Resolution-{{ row.id }}">Resolution</label>
+                                                            <input type="number" class="form-control" id="Resolution-{{ row.id }}" placeholder="250" value="250">
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label for="gamma-{{ row.id }}">Gamma</label>
+                                                            <input type="number" class="form-control" id="gamma-{{ row.id }}" placeholder="0.2" value="0.2">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <input type="checkbox" id="enable-img-plot-{{ row.id }}" checked>
+                                                            <label for="enable-img-plot-{{ row.id }}">Enable Image Plotting</label>
+                                                        </div>
+                                                                                                            <!-- Empty line -->
+                                                    <br></br>
+                                                    <button type="button" class="btn btn-primary update-plot mb-3" data-id="{{ row.id }}">Update Plot</button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
+                                    
+                                    
+                                    
                                     
                                     {% endfor %}
                                 </tbody>
@@ -135,15 +226,6 @@
             });
         });
         
-        $(window).resize(function() {
-            var update = {
-                width: window.innerWidth  // or any new width
-            };
-            $('.waveform-plot').each(function() {
-                var id = $(this).attr('id');
-                Plotly.relayout(id, update);
-            });
-        });
         function plotWaveform(data, id) {
             let traces = [];
             let waveform_data = data['waveform_data'];
@@ -286,42 +368,225 @@
             window.location.href = "/download_waveform_data?id=" + id;
         }
 
+        $(document).ready(function() {
+            $('.area-chart').click(function() {
+                let id = $(this).data('id');
+                let rowId = '#dispersion-row-' + id;
+        
+                if ($(rowId).is(':visible')) {
+                    $(rowId).hide();
+                } else {
+                    $(rowId).show();
+                    // Fetch data for the given ID and call the plotWaveform function
+                    plotPop(id);
+                }
+            });
+        });
+
+        function powerNormalize(data, gamma) {
+            // Normalize data to [0, 1]
+            let maxVal = Math.max(...data.map(row => Math.max(...row)));
+            let minVal = Math.min(...data.map(row => Math.min(...row)));
+            let normalizedData = data.map(row => row.map(val => (val - minVal) / (maxVal - minVal)));
+        
+            // Apply power transformation
+            return normalizedData.map(row => row.map(val => Math.pow(val, gamma)));
+        }
+        
         function plotPop(id) {
-            // Call the backend API to get the frequency and velocity data
-            fetch(`/plot_pop?id=${id}`)
+            let segmentLength = $("#segment-length-" + id).val() || 3000;
+            let plotStyle = $("#plot-style-" + id).val();
+            var traceColor = $("#plot-color-" + id).val();
+            let enableImgPlot = $("#enable-img-plot-" + id).prop('checked');
+            let gamma = $("#gamma-" + id).val() || 0.2;
+
+            let Fmin = $("#Fmin-" + id).val() || 1;
+            let Fmax = $("#Fmax-" + id).val() || 12;
+            let Vmin = $("#Vmin-" + id).val() || 0;
+            let Vmax = $("#Vmax-" + id).val() || 600;
+            let Resolution = $("#Resolution-" + id).val() || 250;
+        
+            // Fetch the dispersion curve data
+            fetch(`/plot_pop?id=${id}&segment_length=${segmentLength}`)
             .then(response => response.json())
             .then(data => {
-                // Use Plotly to plot the data
-                var trace = {
-                    x: data.frequency,
-                    y: data.velocity,
-                    mode: 'lines',
-                    type: 'scatter'
-                };
+                var plotData = [];
+                
+                // If image plotting is enabled
+                if(enableImgPlot) {
+                    // Fetch the image data
+                    fetch(`/get_image_data?id=${id}&segment_length=${segmentLength}&Fmin=${Fmin}&Fmax=${Fmax}&Vmin=${Vmin}&Vmax=${Vmax}&Resolution=${Resolution}`)
+                    .then(response => response.json())
+                    .then(imgData => {
+                        // Create a heatmap trace for the image data
+                        // Use the function
+                        let normalizedDs = powerNormalize(imgData.ds, gamma);
+
+                        let imgTrace = {
+                            z: normalizedDs,
+                            x: imgData.f,
+                            y: imgData.vs,
+                            type: 'heatmap',
+                            colorscale: 'Jet',
+                            showscale: false
+                        };
+                        plotData.push(imgTrace);
         
-                var layout = {
-                    xaxis: {
-                        range: [0, 15],
-                        title: 'Frequency'
-                    },
-                    yaxis: {
-                        range: [0, 600],
-                        title: 'Velocity'
+                        // Create the trace for the dispersion curve
+                        var trace = {
+                            x: data.frequency,
+                            y: data.velocity,
+                            mode: plotStyle,
+                            name: 'Velocity'
+                        };
+                        plotData.push(trace);
+
+                        // Create the trace for the spline
+                        var spline = {
+                            x: [],  // Empty arrays for the spline trace
+                            y: [],
+                            mode: 'lines+markers',
+                            line: {shape: 'spline'},  // This makes the line a spline
+                            name: 'Spline'
+                        }
+                        plotData.push(spline);
+
+                        spline.hoverinfo = 'none';
+                        trace.hoverinfo = 'none';
+                        imgTrace.hoverinfo = 'none';
+
+                        if (plotStyle === "lines") {
+                            trace.line = {
+                                color: traceColor
+                            };
+                        } else if (plotStyle === "markers") {
+                            trace.marker = {
+                                color: traceColor,
+                                size: 4  // Adjust the size as needed
+                            };
+                        }
+        
+                        var layout = {
+                            title: 'Dispersion Curve of ID:' + id,
+                            xaxis: {
+                                range: [$("#x-min-" + id).val() || 0, $("#x-max-" + id).val() || 15],
+                                title: 'Frequency'
+                            },
+                            yaxis: {
+                                range: [$("#y-min-" + id).val() || 0, $("#y-max-" + id).val() || 600],
+                                title: 'Velocity'
+                            }
+                        };
+        
+                        // Plot the data
+                        Plotly.newPlot(`dispersion-plot-${id}`, plotData, layout, { staticPlot: false, displayModeBar: true, modeBarButtonsToRemove: ['zoom2d', 'pan2d'] }).then(() => {
+                            var plotDiv = document.getElementById(`dispersion-plot-${id}`);
+                            plotDiv.on('plotly_click', function(data) {
+                                // The x and y coordinates of the click
+                                var x = data.points[0].x;
+                                var y = data.points[0].y;
+                        
+                                // Add the clicked point to the spline trace data
+                                spline.x.push(x);
+                                spline.y.push(y);
+
+                                // Sort the points in the spline trace by x values (optional but can make the spline smoother)
+                                var combined = [];
+                                for (var i = 0; i < spline.x.length; i++) {
+                                    combined.push({ 'x': spline.x[i], 'y': spline.y[i] });
+                                }
+                                combined.sort(function(a, b) {
+                                    return a.x - b.x;
+                                });
+                                for (var i = 0; i < combined.length; i++) {
+                                    spline.x[i] = combined[i].x;
+                                    spline.y[i] = combined[i].y;
+                                }
+                                
+                                // Redraw the plot with the updated data
+                                Plotly.redraw(`dispersion-plot-${id}`);
+                            });
+
+                            // Handle the event when a point on the spline is selected for adjustment/deletion
+                            document.getElementById(`dispersion-plot-${id}`).on('plotly_selected', function(eventData) {
+                                if (eventData) {
+                                    var x = eventData.points[0].x;
+                                    var y = eventData.points[0].y;
+                                    
+                                    var index = spline.x.indexOf(x);
+                                    if (index > -1) {
+                                        spline.x.splice(index, 1);
+                                        spline.y.splice(index, 1);
+                                    }
+
+                                    // Redraw the plot after deleting the selected point
+                                    Plotly.redraw(`dispersion-plot-${id}`);
+                                }
+                            });
+
+                        });
+
+                    });
+                } else {
+                    // Only plot the dispersion curve if image plotting is not enabled
+                    var trace = {
+                        x: data.frequency,
+                        y: data.velocity,
+                        mode: plotStyle,
+                        name: 'Velocity'
+                    };
+                    plotData.push(trace);
+
+                    // Create the trace for the spline
+                    var spline = {
+                        x: [],  // Empty arrays for the spline trace
+                        y: [],
+                        mode: 'lines',
+                        line: {shape: 'spline'},  // This makes the line a spline
+                        name: 'Spline'
                     }
-                };
+                    plotData.push(spline);
         
-                var plotData = [trace];
-                
-                // Target the specific div for this id
-                Plotly.newPlot(`dispersion-plot-${id}`, plotData, layout);
-                
-                // Show the plot (assuming it starts hidden)
-                document.getElementById(`dispersion-row-${id}`).style.display = "table-row";
-            }).
-            catch(error => {
+                    var layout = {
+                        title: 'Dispersion Curve of ID:' + id,
+                        xaxis: {
+                            range: [$("#x-min-" + id).val() || 0, $("#x-max-" + id).val() || 15],
+                            title: 'Frequency'
+                        },
+                        yaxis: {
+                            range: [$("#y-min-" + id).val() || 0, $("#y-max-" + id).val() || 600],
+                            title: 'Velocity'
+                        }
+                    };
+        
+                    // Plot the data
+                    Plotly.newPlot(`dispersion-plot-${id}`, plotData, layout);
+                }
+
+            })
+            .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);
-              });
+            });
         }
+        
+        
+        $(window).resize(function() {
+            var update = {
+                width: window.innerWidth  // or any new width
+            };
+            $('.dispersion-plot').each(function() {
+                var id = $(this).attr('id');
+                Plotly.relayout(id, update);
+            });
+        });
+
+        $(document).ready(function() {
+            $(".update-plot").click(function() {
+                let id = $(this).data('id');
+                plotPop(id); // Call the plotting function again to adjust the axis limits
+            });
+        });
+        
 
         $(document).ready(function () {
             let selectedIds = [];

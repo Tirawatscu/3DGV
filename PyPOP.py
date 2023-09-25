@@ -3,6 +3,8 @@
 
 import numpy as np
 from numpy import *
+from scipy.ndimage import gaussian_filter
+from matplotlib.colors import PowerNorm
 
 
 class POP():
@@ -25,8 +27,8 @@ class POP():
            else:
               SN = SN + 1
               KR = KR + sqrt(2*(var(P,axis=1)))
+        KR[KR==0] = 1e-10
         KR = KR/SN
-        KR[KR == 0] = 1e-10  # replace zero with a very small value
         C  = 2*pi*self.radius*self.F/KR
         C2 = 2*pi*self.radius*self.F/(pi/1.5)
         return self.F, C, C2
@@ -98,6 +100,73 @@ class POP():
         
         return self.F, C1, C2, C3, C4, C5
     
+    def imagPop(self, Fmin=0, Fmax=25, vmin=0, vmax=800, resolustion=250):
+        TL = self.data.shape[0]
+        FminIndex = np.argmin(abs(self.F-Fmin))
+        FmaxIndex = np.argmin(abs(self.F-Fmax))
+        
+        F = self.F[FminIndex:FmaxIndex]
+        C = np.zeros([int((TL-self.length)/(self.length/2)) + 1, int(FmaxIndex-FminIndex)])
+        for i in np.arange(0, TL-self.length, self.length/2, dtype=int):
+            P = unwrap(angle(fft.fft(self.data[i:i+self.length,:]* np.hanning(self.length).reshape(self.length,1),axis=0)),axis=1)[0:int(self.length/2)]
+            if i == 0:
+                SN = 1
+                KR = sqrt(2*(var(P,axis=1)))
+                KR[KR==0] = 1e-10
+                C[SN-1,:] = 2*pi*self.radius*F/KR[FminIndex:FmaxIndex]
+            else:
+                SN = SN + 1
+                KR = sqrt(2*(var(P,axis=1)))
+                KR[KR==0] = 1e-10
+                C[SN-1,:] = 2*pi*self.radius*F/KR[FminIndex:FmaxIndex]
+        from tqdm.notebook import tqdm
+        vs = np.linspace(vmin,vmax,resolustion)
+        f = np.linspace(Fmin,Fmax,resolustion)
+        img = np.zeros([len(vs),len(f)])
+        for c in tqdm(C):
+            for ix, ci in enumerate(c):
+                if ci <= vmax:
+                    index1 = np.argmin(np.abs(ci-vs))
+                    index2 = np.argmin(np.abs(F[ix]-f))
+                    #print(index1, index2)
+                    img[index1, index2] += 1
+        ds = img
+        gamma = 0.2
+        norm = PowerNorm(gamma, vmin=ds[10:30,:].min(), vmax=ds[10:30,:].max())
+        return gaussian_filter(ds, sigma=2), f, vs, norm
+    
+    def imagPopAmp(self, Fmin=0, Fmax=25, vmin=0, vmax=1, resolustion=250):
+        TL = self.data.shape[0]
+        FminIndex = np.argmin(abs(self.F-Fmin))
+        FmaxIndex = np.argmin(abs(self.F-Fmax))
+        
+        F = self.F[FminIndex:FmaxIndex]
+        C = np.zeros([int((TL-self.length)/(self.length/2)) + 1, int(FmaxIndex-FminIndex)])
+        for i in np.arange(0, TL-self.length, self.length/2, dtype=int):
+            P = unwrap(angle(fft.fft(self.data[i:i+self.length,:]* np.hanning(self.length).reshape(self.length,1),axis=0)),axis=1)[0:int(self.length/2)]
+            if i == 0:
+                SN = 1
+                KR = sqrt(2*(var(P,axis=1)))
+                C[SN-1,:] = 2*pi*self.radius*F/KR[FminIndex:FmaxIndex]
+            else:
+                SN = SN + 1
+                KR = sqrt(2*(var(P,axis=1)))
+                C[SN-1,:] = 2*pi*self.radius*F/KR[FminIndex:FmaxIndex]
+        from tqdm.notebook import tqdm
+        vs = np.linspace(vmin,vmax,resolustion)
+        f = np.linspace(Fmin,Fmax,resolustion)
+        img = np.zeros([len(vs),len(f)])
+        for c in tqdm(C):
+            for ix, ci in enumerate(c):
+                if ci <= vmax:
+                    index1 = np.argmin(np.abs(ci-vs))
+                    index2 = np.argmin(np.abs(F[ix]-f))
+                    #print(index1, index2)
+                    img[index1, index2] += 1
+        ds = img
+        gamma = 0.2
+        norm = PowerNorm(gamma, vmin=ds[10:30,:].min(), vmax=ds[10:30,:].max())
+        return gaussian_filter(ds, sigma=2), f, vs, norm
         
 
     def makepoplove(self):
